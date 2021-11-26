@@ -1,0 +1,219 @@
+﻿﻿
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/element-plus@1.1.0-beta.24/dist/index.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/vue@next"></script>
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@1.1.0-beta.24"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@0.24.0/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.7/dayjs.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div id="msg"></div>
+        <el-button type="primary" @click="showAddOrEdit(null,'添加')">添加</el-button>
+        <el-button type="primary" @click="updateFrameWorksVersion">手动更新所有版本</el-button>
+
+        <el-row justify="center">
+            <el-pagination v-model:page-size="state.dataTable.pageInfo.size"
+                           v-model:total="state.dataTable.pageInfo.total"
+                           v-model:current-page="state.dataTable.pageInfo.index"
+                           :pager-count="5"
+                           layout="prev, pager, next">
+            </el-pagination>
+        </el-row>
+
+        <el-table :data="state.dataTable.data" stripe style="width: 100%" :header-cell-style="()=>'text-align: center;'"
+                  :cell-style="()=>'text-align: center;'">
+            <el-table-column prop="Id" label="#" width="50"></el-table-column>
+            <el-table-column prop="Name" label="名称"></el-table-column>
+            <el-table-column prop="Version" label="版本"></el-table-column>
+            <el-table-column prop="Url" label="地址"></el-table-column>
+            <el-table-column label="操作" width="180">
+                <template #default="scope">
+                    <el-button type="success"
+                               icon="el-icon-collection"
+                               circle
+                               @click="showMessages(scope.row.Id)">
+                    </el-button>
+
+                    <el-button type="primary"
+                               icon="el-icon-edit"
+                               circle
+                               @click="showAddOrEdit(scope.row.Id,'编辑')">
+                    </el-button>
+
+                    <el-button type="danger"
+                               icon="el-icon-delete"
+                               circle
+                               @click="handleDelete(scope.row.Id)">
+                    </el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+
+        <el-dialog :title="state.addOrEdit.title"
+                   v-model="state.addOrEdit.show">
+            <el-form :model="state.addOrEdit.data">
+                <el-form-item label="名称">
+                    <el-input v-model="state.addOrEdit.data.Name"></el-input>
+                </el-form-item>
+                <el-form-item label="Github地址">
+                    <el-input v-model="state.addOrEdit.data.Url"></el-input>
+                </el-form-item>
+            </el-form>
+
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="state.addOrEdit.show = false">取 消</el-button>
+                    <el-button type="primary" @click="handleSave">确 定</el-button>
+                </span>
+            </template>
+        </el-dialog>
+
+        <el-drawer withHeader="false"
+                   v-model="state.messages.show"
+                   direction="ttb"
+                   destroy-on-close>
+            <el-table stripe :data="state.messages.data" :header-cell-style="()=>'text-align: center;'"
+                      :cell-style="()=>'text-align: center;'">
+                <el-table-column property="Content" label="内容"></el-table-column>
+                <el-table-column label="时间">
+                    <template #default="scope">
+                        {{formatTime(scope.row.CreateTime)}}
+                    </template>
+                </el-table-column>
+            </el-table>
+        </el-drawer>
+
+    </div>
+    <script type="module">
+        import { myDel, myPut, myGet, myPost } from "./js/request.js";
+
+        const { createApp, defineComponent, reactive, onMounted, toRefs } = Vue;
+        const { ElMessage, ElNotification } = ElementPlus;
+
+        let app = createApp(defineComponent({
+            setup() {
+                let state = reactive({
+                    dataTable: {
+                        data: [],
+                        pageInfo: {
+                            index: 1,
+                            size: 20,
+                            total: 20,
+                        }
+                    },
+                    addOrEdit: {
+                        show: false,
+                        title: "",
+                        data: {}
+                    },
+                    messages: {
+                        show: false,
+                        data: []
+                    }
+                })
+
+                let showAddOrEdit = (id, title) => {
+                    state.addOrEdit.title = title;
+                    if (id !== null) {
+                        state.addOrEdit.data = { ...state.dataTable.data.find(a => a.Id === id) }
+                    } else {
+                        state.addOrEdit.data = {};
+                    }
+                    state.addOrEdit.show = true;
+                }
+                let handleSave = () => {
+                    let data = {
+                        name: state.addOrEdit.data.Name,
+                        url: state.addOrEdit.data.Url,
+                    };
+                    if (state.addOrEdit.data.Id != null) {
+                        data.id = state.addOrEdit.data.Id
+                    }
+                    myPost('./addOrEdit', data).then(r => {
+                        if (r.Succeeded) {
+                            ElMessage.success('成功');
+                            state.addOrEdit.show = false;
+                            getFrameWorks();
+                        }
+                    })
+                }
+                let handleDelete = (id) => {
+                    myDel("/?id=" + id)
+                        .then(r => {
+                            console.log(r)
+                            if (r.Succeeded) {
+                                ElMessage.success('删除成功');
+                                getFrameWorks();
+                            }
+                        })
+                }
+             
+                let getFrameWorks = () => {
+                    myGet(`/getFrameWorks?index=${state.dataTable.pageInfo.index}&size=${state.dataTable.pageInfo.size}`)
+                        .then(r => {
+                            console.log(r)
+                            if (r.Succeeded) {
+                                state.dataTable.data = r.Data.Items;
+                                state.dataTable.pageInfo.total = r.Data.TotalCount;
+                            }
+                        })
+                }
+                onMounted(() => {
+                    getFrameWorks();
+                })
+
+                let updateFrameWorksVersion = () => {
+
+                    let notification = ElNotification({
+                        title: "提示",
+                        message: "正在执行...",
+                        iconClass: "el-icon-loading",
+                        customClass: "is-loading"
+                    })
+
+                    myGet("/run").then(r => {
+                        if (r.Succeeded) {
+                            ElNotification.success(r.Data)
+                            notification.close();
+                            getFrameWorks();
+                        }
+                    })
+                }
+
+                let showMessages = (id) => {
+                    myGet(`/getMessageByFrameWorkId?id=${id}`)
+                        .then(r => {
+                            console.log(r)
+                            if (r.Succeeded) {
+                                state.messages.data = r.Data.Items;
+                                state.messages.show = true;
+                            }
+                        })
+                }
+                let formatTime = (time) => {
+                    return dayjs(time).format('YYYY-MM-DD HH:mm:ss')
+                }
+
+
+                return {
+                    state,
+                    handleDelete,
+                    handleSave,
+                    showAddOrEdit,
+                    updateFrameWorksVersion,
+                    showMessages,
+                    formatTime,
+                }
+            }
+        }))
+        app.use(ElementPlus);
+        app.mount("#app");</script>
+</body>
+</html>
