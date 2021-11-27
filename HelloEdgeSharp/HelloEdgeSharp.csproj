@@ -24,7 +24,6 @@
 
   <ItemGroup>
     <PackageReference Include="EdgeSharp.Core" Version="0.9.0" />
-    <PackageReference Include="EdgeSharp.Core.Owin" Version="0.9.0" />
     <PackageReference Include="EdgeSharp.WinForms" Version="0.9.0" />
   </ItemGroup>
 

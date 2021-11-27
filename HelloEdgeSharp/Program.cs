@@ -1,4 +1,4 @@
-using System.ComponentModel;
+ï»¿using System.ComponentModel;
 using System.Windows.Forms;
 
 using EdgeSharp.Core;
@@ -50,7 +50,7 @@ namespace HelloEdgeSharp
 
             services.AddSingleton<IBrowserWindow, SampleBrowserForm>();
 
-            // ×¢Èë ¿ØÖÆÆ÷
+            // æ³¨å…¥ æ§åˆ¶å™¨
             RegisterActionControllerAssembly(services, typeof(HelloController).Assembly);
         }
 
@@ -65,23 +65,23 @@ namespace HelloEdgeSharp
     {
         public SampleConfig() : base()
         {
-            // À¹½Ø api ²¢µ¼º½µ½ Controller (ÓÃRegisterActionControllerAssembly×¢²á¿ØÖÆÆ÷)
-            UrlSchemes.Add(new ("http", "api", null, UrlSchemeType.ResourceRequest));
-            // ¾²Ì¬ÎÄ¼ş×ÊÔ´ À¹½Ø µ¼º½µ½ wwwroot
-            UrlSchemes.Add(new ("http", "app", "wwwroot", UrlSchemeType.HostToFolder));
-            
-            // ÉèÖÃ Ê×Ò³µØÖ·
+            // æ‹¦æˆª api å¹¶å¯¼èˆªåˆ° Controller (ç”¨RegisterActionControllerAssemblyæ³¨å†Œæ§åˆ¶å™¨)
+            UrlSchemes.Add(new("http", "api", null, UrlSchemeType.ResourceRequest));
+            // é™æ€æ–‡ä»¶èµ„æº æ‹¦æˆª å¯¼èˆªåˆ° wwwroot
+            UrlSchemes.Add(new("http", "app", "wwwroot", UrlSchemeType.HostToFolder));
+
+            // è®¾ç½® é¦–é¡µåœ°å€
             StartUrl = "http://app/index.html"; ;
 
-            // È¥µô´°¿Ú±êÌâÀ¸
-             //WindowOptions.Borderless = true;
-         
+            // å»æ‰çª—å£æ ‡é¢˜æ 
+            //WindowOptions.Borderless = true;
+
         }
     }
 
 
     internal class SampleBrowserForm : BrowserForm
-    {    
+    {
 
         public SampleBrowserForm()
         {
@@ -96,15 +96,15 @@ namespace HelloEdgeSharp
             }
         }
 
-       
-        // ¿ÉÒÔÖØĞ´ ¸÷ÖÖÉúÃüÖÜÆÚ      
+
+        // å¯ä»¥é‡å†™ å„ç§ç”Ÿå‘½å‘¨æœŸ      
         protected override void Bootstrap()
         {
             base.Bootstrap();
         }
 
         protected override void OnClosing(CancelEventArgs e)
-        {           
+        {
             base.OnClosing(e);
         }
     }
